@@ -13,7 +13,7 @@ void SnM(mpz_t a, mpz_t n, mpz_t h) {
 
 	char* str = mpz_get_str(NULL, 2, h);
 
-	for(int t = strlen(str)-2 ; t >= 0 ; t--) {
+	for(int t = 1 ; t <= strlen(str)-1 ; t++) {
 		mpz_mul(r, r, r);
 		mpz_mod(r, r, n);
 
@@ -62,10 +62,6 @@ char Miller_Rabin(mpz_t n, int k) {
 
 	int i = 1;
 
-	//printf("%d, ", s);
-	//mpz_out_str(stdout, 10, t);
-
-
 	while( i <= k ) {
 here:
 		mpz_set(tmp, n);
@@ -74,18 +70,8 @@ here:
 		mpz_urandomm(a, state, tmp);
 		mpz_add(a, a, deux);
 
-		/*mpz_set(a1, a);
-	 	while(mpz_cmp(un, t) < 0) {
-	 		mpz_mul(a, a, a1);
-	 		mpz_sub(t, t, un);
-	 	}*/
 		SnM(a, n, t);
 	 	mpz_set(y, snm);
-
-	 	while(mpz_cmp(y, n) >= 0) {
-	 		mpz_mod(y, y, n);	
-	 	}
-
 	 	mpz_set(tmp, y);
 
 	 	if( (mpz_cmp(tmp, un) == 0) || (mpz_cmp(tmp, minus) == 0) ) {
@@ -100,8 +86,8 @@ here:
 	 	}	
 	 	
 	 	for(int j = 1 ; j < s ; j++) {
-	 		mpz_mul(y, y, y);
-	 		mpz_mod(y, y, n);
+	 		SnM(y, n, deux);
+	 		mpz_set(y, snm);
 
 	 		if(mpz_cmp(y, minus) == 0) {
 	 			i++;
@@ -150,7 +136,7 @@ int main() {
 
 	printf("MilLer-RaBin\n\n");
 
-	for(int i = 2 ; i < 100 ; i++) {
+	for(int i = 1223 ; i < 1224 ; i++) {
 		if(i%2 == 0) {
 			printf("%d: c\n", i);
 		}
