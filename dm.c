@@ -99,7 +99,7 @@ void test_de_fermat(mpz_t n , int k){
 }
 
 
-char Miller_Rabin(mpz_t n, int k) {
+char* Miller_Rabin(mpz_t n, int k) {
 	mpz_t r, t, y, a, tmp, minus, mun;
 	gmp_randstate_t state;
 
@@ -176,7 +176,7 @@ here:
 		mpz_clear(tmp);
 		gmp_randclear(state);
 
-	  	return 'c';
+	  	return "compose !";
 	}
 	 	
 
@@ -190,11 +190,16 @@ there:
 	mpz_clear(tmp);
 	gmp_randclear(state);
 
-	return 'p';
+	return "premier !";
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+	if(argc < 2) {
+		printf("Usage: ./dm nombre [k]\n");
+		exit(-1);
+	}
+
 	mpz_t n, t, neuf, ss;
 
 	mpz_init_set_str(deux, "2", 10);
@@ -208,24 +213,31 @@ int main() {
 	char str[10];
 	str[0] = '\0';
 
-	printf("MilLer-RaBin\n\n");
+	int i = atoi(argv[1]);
 
-	for(int i = 1153 ; i < 1205 ; i++) {
+	sprintf(str, "%d", i);
+	mpz_init_set_str(n, str, 10);
+
+	if(argc == 3) {
 		if(i%2 == 0) {
-			printf("%d: c\n", i);
+			printf("Test de Miller-Rabin:\n%d est composé !\n\nTest de Fermat:\n%d", i, i);
 		}
-		else {
-			sprintf(str, "%d", i);
-			mpz_init_set_str(n, str, 10);
-			printf("%d: %c\n%d: ", i, Miller_Rabin(n, i), i);
-
-			test_de_fermat(n, i);
-			mpz_clear(n);
-		}	
-		str[0] = '\0';
+		else{
+			printf("Test de Miller-Rabin\n%d: %s\n\nTest de Fermat:\n%d: ", i, Miller_Rabin(n, (int)atoi(argv[2])), i);
+		}
+		test_de_fermat(n, (int)atoi(argv[2]));
+	}
+	else if(argc == 2){
+		if(i%2 == 0) {
+			printf("Test de Miller-Rabin:\n%d est composé !\n\nTest de Fermat:\n%d", i, i);
+		}
+		else{
+			printf("Test de Miller-Rabin:\n%d: %s\n\nTest de Fermat:\n%d: ", i, Miller_Rabin(n, i-1), i);
+		}
+		test_de_fermat(n, i-1);
 	}
 
-
+	mpz_clear(n);
 	mpz_clear(t);
 	mpz_clear(neuf);
 	mpz_clear(ss);
