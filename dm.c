@@ -31,22 +31,88 @@ void SnM(mpz_t a, mpz_t n, mpz_t h) {
 }
 
 
+void test_de_fermat(mpz_t n , int k){
+
+    mpz_t  a ,m, n1 ;//n1 == n-1
+    int i;
+  
+    mpz_init(a);
+    mpz_t max , tmp; 
+   
+    mpz_init(max);
+    mpz_init(tmp); //tmp est l'entier aléatoire dans a^n-1 mod n qui est compris en 1 et n-1
+   
+    mpz_init_set(n1, n); //  n-1
+	mpz_sub_ui(n1, n1, 1);
+
+    mpz_init_set(max, n); //On initialise la max à n-2 pour pouvoir générer un nombre aléatoire 1 < a < n-1
+	mpz_sub_ui(max,max,2);
+
+    gmp_randstate_t state; //pour générer l entier aleatoire 
+	gmp_randinit_default(state);
+    
+   /**
+	* vérification que l entier entrée 
+	* si il est pair donc forcément composé
+	**/
+
+   if(mpz_divisible_ui_p(n,2)){
+		printf(" Composé ! c'est un nombre pair\n");
+		return ;
+	}
+
+	/**
+	 * "1" n'est pas premier
+	 * */
+
+    if(mpz_cmp_ui(n,1) == 0){
+		printf(" '1' n'est pas  premier\n");
+		return ;
+	}
+
+  /**
+   * Boucle for de 1 a k 
+   * Choisir aleatoirement "a" tel que 1 < a < n − 1 ;
+		si a^n−1 ≡ 1 mod n alors "il est composé" , sinon "il est premier "
+	*/
+
+    for(i = 1 ; i < k; i++){
+        //Generation de l'entier aleatoirement entre 0 < a < n-2
+		mpz_urandomm(a, state, max);
+        //meme chose mais  entre 1 < a < n-1
+		mpz_add_ui(a, a, 1); 
+		  
+		SnM(a, n, n1); // la fonction qui effectue a^n-1 mod n 
+		mpz_set(tmp , snm);
+
+		if(mpz_cmp_ui(tmp, 1) != 0){ // verifie si le resultat est different de 1 mod n
+			printf("Composé !\n");
+			mpz_clears(max, tmp, a, n1, state, NULL);
+			
+			return;
+		}else {
+          printf("premier !\n");	
+    	  mpz_clears(max, tmp, a, n1, state, NULL);
+	      return ;
+		}
+	}   
+}
+
+
 char Miller_Rabin(mpz_t n, int k) {
-	mpz_t r, t, y, a, a1, tmp, minus, mun;
+	mpz_t r, t, y, a, tmp, minus, mun;
 	gmp_randstate_t state;
 
 	mpz_init(r);
 	mpz_init(t);
 	mpz_init(y);
 	mpz_init(a);
-	mpz_init(a1);
 	mpz_init(tmp);
 	mpz_init(minus);
-	mpz_init(mun);
 	mpz_set(minus, n);
 	mpz_sub(minus, minus, un);
 	mpz_init_set_str(mun, "-1", 10);
-	gmp_randinit_mt(state); 
+	gmp_randinit_mt(state);
 
 	mpz_set(t, n);
 	mpz_sub(t, t, un);
@@ -100,8 +166,17 @@ here:
 	 			}
 	 		}
 	 	}
+	 		
+	 	mpz_clear(r);
+		mpz_clear(t);
+		mpz_clear(y);
+		mpz_clear(a);
+		mpz_clear(minus);
+		mpz_clear(mun);
+		mpz_clear(tmp);
+		gmp_randclear(state);
+
 	  	return 'c';
-		i++;
 	}
 	 	
 
@@ -110,10 +185,10 @@ there:
 	mpz_clear(t);
 	mpz_clear(y);
 	mpz_clear(a);
-	mpz_clear(a1);
 	mpz_clear(minus);
 	mpz_clear(mun);
 	mpz_clear(tmp);
+	gmp_randclear(state);
 
 	return 'p';
 }
@@ -125,33 +200,32 @@ int main() {
 	mpz_init_set_str(deux, "2", 10);
 	mpz_init_set_str(un, "1", 10);
 	mpz_init_set_str(zero, "0", 10);
-	mpz_init_set_str(n, "3", 10);
 	mpz_init_set_str(t, "7", 10);
 	mpz_init_set_str(neuf, "3", 10);
 	mpz_init_set_str(ss, "77", 10);
 	mpz_init(snm);
 
-	char str[4];
+	char str[10];
 	str[0] = '\0';
 
 	printf("MilLer-RaBin\n\n");
 
-	for(int i = 1223 ; i < 1224 ; i++) {
+	for(int i = 1153 ; i < 1205 ; i++) {
 		if(i%2 == 0) {
 			printf("%d: c\n", i);
 		}
 		else {
 			sprintf(str, "%d", i);
 			mpz_init_set_str(n, str, 10);
-			printf("%d: %c\n", i, Miller_Rabin(n, i));
+			printf("%d: %c\n%d: ", i, Miller_Rabin(n, i), i);
+
+			test_de_fermat(n, i);
+			mpz_clear(n);
 		}	
 		str[0] = '\0';
 	}
-	//SnM(neuf, ss, t);
 
-	//mpz_out_str(stdout, 10, snm);
 
-	mpz_clear(n);
 	mpz_clear(t);
 	mpz_clear(neuf);
 	mpz_clear(ss);
