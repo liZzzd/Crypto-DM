@@ -4,6 +4,7 @@
 #include <string.h>
 #include "dm.h"
 
+
 void SnM(mpz_t a, mpz_t n, mpz_t h) {
 	mpz_t r;
 
@@ -31,10 +32,9 @@ void SnM(mpz_t a, mpz_t n, mpz_t h) {
 }
 
 
-void test_de_fermat(mpz_t n , int k){
+void test_de_fermat(mpz_t n , mpz_t k){
 
     mpz_t  a ,m, n1 ;//n1 == n-1
-    int i;
   
     mpz_init(a);
     mpz_t max , tmp; 
@@ -55,18 +55,26 @@ void test_de_fermat(mpz_t n , int k){
 	* vérification que l entier entrée 
 	* si il est pair donc forcément composé
 	**/
-
    if(mpz_divisible_ui_p(n,2)){
 		printf(" Composé ! c'est un nombre pair\n");
+		mpz_clear(max);
+		mpz_clear(tmp);
+		mpz_clear(a);
+		mpz_clear(n1);
+		gmp_randclear(state);
 		return ;
 	}
 
 	/**
 	 * "1" n'est pas premier
 	 * */
-
     if(mpz_cmp_ui(n,1) == 0){
 		printf(" '1' n'est pas  premier\n");
+		mpz_clear(max);
+		mpz_clear(tmp);
+		mpz_clear(a);
+		mpz_clear(n1);
+		gmp_randclear(state);
 		return ;
 	}
 
@@ -76,7 +84,7 @@ void test_de_fermat(mpz_t n , int k){
 		si a^n−1 ≡ 1 mod n alors "il est composé" , sinon "il est premier "
 	*/
 
-    for(i = 1 ; i < k; i++){
+    while(mpz_cmp_ui(k, 0) > 0){
         //Generation de l'entier aleatoirement entre 0 < a < n-2
 		mpz_urandomm(a, state, max);
         //meme chose mais  entre 1 < a < n-1
@@ -87,19 +95,28 @@ void test_de_fermat(mpz_t n , int k){
 
 		if(mpz_cmp_ui(tmp, 1) != 0){ // verifie si le resultat est different de 1 mod n
 			printf("Composé !\n");
-			mpz_clears(max, tmp, a, n1, state, NULL);
-			
+			mpz_clear(max);
+			mpz_clear(tmp);
+			mpz_clear(a);
+			mpz_clear(n1);
+			gmp_randclear(state);
 			return;
-		}else {
+		}
+		else {
           printf("premier !\n");	
-    	  mpz_clears(max, tmp, a, n1, state, NULL);
+    		mpz_clear(max);
+			mpz_clear(tmp);
+			mpz_clear(a);
+			mpz_clear(n1);
+    	 	gmp_randclear(state);
 	      return ;
 		}
-	}   
+		mpz_sub(k, k, un);
+	}
 }
 
 
-char* Miller_Rabin(mpz_t n, int k) {
+char* Miller_Rabin(mpz_t n, mpz_t k) {
 	mpz_t r, t, y, a, tmp, minus, mun;
 	gmp_randstate_t state;
 
@@ -126,9 +143,7 @@ char* Miller_Rabin(mpz_t n, int k) {
 		mpz_mod(r, t, deux);
 	}
 
-	int i = 1;
-
-	while( i <= k ) {
+	while( mpz_cmp_ui(k, 0) > 0 ) {
 here:
 		mpz_set(tmp, n);
 		mpz_sub(tmp, tmp, deux);
@@ -141,9 +156,9 @@ here:
 	 	mpz_set(tmp, y);
 
 	 	if( (mpz_cmp(tmp, un) == 0) || (mpz_cmp(tmp, minus) == 0) ) {
-	 		i++;
+	 		mpz_sub_ui(k, k, 1);
 
-	 		if(i <= k) {
+	 		if( mpz_cmp_ui(k, 0) > 0 ) {
 	 			goto here;
 	 		}
 	 		else {
@@ -156,9 +171,9 @@ here:
 	 		mpz_set(y, snm);
 
 	 		if(mpz_cmp(y, minus) == 0) {
-	 			i++;
+	 			mpz_sub_ui(k, k, 1);
 
-	 			if(i <= k) {
+	 			if( mpz_cmp_ui(k, 0) > 0 ) {
 	 				goto here;
 	 			}
 	 			else {
@@ -200,7 +215,7 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	mpz_t n, t, neuf, ss;
+	mpz_t t, neuf, ss;
 
 	mpz_init_set_str(deux, "2", 10);
 	mpz_init_set_str(un, "1", 10);
@@ -213,31 +228,48 @@ int main(int argc, char** argv) {
 	char str[10];
 	str[0] = '\0';
 
-	int i = atoi(argv[1]);
+	mpz_t i, tmp;
 
-	sprintf(str, "%d", i);
-	mpz_init_set_str(n, str, 10);
+	mpz_init_set_str(i, argv[1], 10);
+
+	mpz_init(tmp);
+	mpz_mod_ui(tmp, i, 2);
 
 	if(argc == 3) {
-		if(i%2 == 0) {
-			printf("Test de Miller-Rabin:\n%d est composé !\n\nTest de Fermat:\n%d", i, i);
+		mpz_t k;
+		mpz_init(k);
+		mpz_set_ui(k, (int)atoi(argv[2]) - 1);
+		
+		if(mpz_cmp_ui(tmp, 0) == 0) {
+			printf("Test de Miller-Rabin: Le nombre est composé !\n\nTest de Fermat: ");
 		}
 		else{
-			printf("Test de Miller-Rabin\n%d: %s\n\nTest de Fermat:\n%d: ", i, Miller_Rabin(n, (int)atoi(argv[2])), i);
+			printf("Test de Miller-Rabin: Le nombre est %s\n\nTest de Fermat: Le nombre est ", Miller_Rabin(i, k));
 		}
-		test_de_fermat(n, (int)atoi(argv[2]));
+
+		mpz_sub(k, i, un);
+		test_de_fermat(i, k);
+		mpz_clear(k);
 	}
 	else if(argc == 2){
-		if(i%2 == 0) {
-			printf("Test de Miller-Rabin:\n%d est composé !\n\nTest de Fermat:\n%d", i, i);
+		mpz_t k;
+		mpz_init(k);
+		mpz_sub(k, i, un);
+		
+		if(mpz_cmp_ui(tmp, 0) == 0) {
+			printf("Test de Miller-Rabin: Le nombre est composé !\n\nTest de Fermat: ");
 		}
 		else{
-			printf("Test de Miller-Rabin:\n%d: %s\n\nTest de Fermat:\n%d: ", i, Miller_Rabin(n, i-1), i);
+			printf("Test de Miller-Rabin: Le nombre est %s\n\nTest de Fermat: Le nombre est ", Miller_Rabin(i, k));
 		}
-		test_de_fermat(n, i-1);
+
+		mpz_sub(k, i, un);
+		test_de_fermat(i, k);
+		mpz_clear(k);
 	}
 
-	mpz_clear(n);
+	mpz_clear(i);
+	mpz_clear(tmp);
 	mpz_clear(t);
 	mpz_clear(neuf);
 	mpz_clear(ss);
